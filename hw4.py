@@ -72,11 +72,14 @@ def get_domain(url):
     domain = ""
 
     stripped_url = strip_www(strip_http_request(url))
-    print(stripped_url)
-    i = 0
-    while stripped_url[i] != '/':
-        domain += stripped_url[i]
-        i += 1
+
+    try:
+        i = 0
+        while i < len(stripped_url) and stripped_url[i] != '/':
+            domain += stripped_url[i]
+            i += 1
+    except Exception as e:
+        print(url, stripped_url, e, i)
 
     return domain
 
@@ -94,7 +97,6 @@ def crawl(root, wanted_content=[], within_domain=True):
     `within_domain` specifies whether the crawler should limit itself to the domain of `root`
     '''
     root_domain = get_domain(root)
-    print(root_domain)
 
     queue = Queue()
     queue.put(root)
@@ -159,7 +161,7 @@ def main():
     nonlocal_links = get_nonlocal_links(site)
     writelines('nonlocal.txt', nonlocal_links)
 
-    visited, extracted = crawl(site)
+    visited, extracted = crawl(site, within_domain=True)
     writelines('visited.txt', visited)
     writelines('extracted.txt', extracted)
 
