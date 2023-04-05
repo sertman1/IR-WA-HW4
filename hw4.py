@@ -26,21 +26,66 @@ def parse_links_sorted(root, html):
     # TODO: implement
     return []
 
-
 def get_links(url):
     res = request.urlopen(url)
     return list(parse_links(url, res.read()))
-
 
 def get_nonlocal_links(url):
     '''Get a list of links on the page specificed by the url,
     but only keep non-local links and non self-references.
     Return a list of (link, title) pairs, just like get_links()'''
 
-    # TODO: implement
+    stripped_root_link = strip_http_request(url)
+
     links = get_links(url)
     filtered = []
+
+    for link in links:
+        if is_non_local(link[0], stripped_root_link):
+            filtered.append(link)
+
     return filtered
+
+def is_http_request(url):
+    if len(url) > 8 and url[4] == 's':
+        if url[0:8] == "https://":
+            return True
+    elif len(url) > 7:
+        if url[0:7] == "http://":
+            return True
+
+def strip_http_request(url):
+    if is_http_request(url) and url[4] == 's': # an https request
+        return url[8:len(url)]
+    elif is_http_request:
+        return url[7:len(url)]
+    
+    return url # already stripped
+
+def strip_www(url):
+    if len(url) > 4 and url[0] == "w" and url[1] == "w" and url[2] == "w" and url[3] == ".":
+        url = url[4:len(url)]
+    
+    return url
+
+def get_domain(url):
+    domain = ""
+
+    stripped_url = strip_www(strip_http_request(url))
+    print(stripped_url)
+    i = 0
+    while stripped_url[i] != '/':
+        domain += stripped_url[i]
+        i += 1
+
+    return domain
+
+def is_non_local(url, stripped_root_link):
+    if is_http_request(url):
+        if strip_http_request(url) != stripped_root_link:
+                return True
+        
+    return False
 
 
 def crawl(root, wanted_content=[], within_domain=True):
@@ -48,7 +93,8 @@ def crawl(root, wanted_content=[], within_domain=True):
     `wanted_content` is a list of content types to crawl
     `within_domain` specifies whether the crawler should limit itself to the domain of `root`
     '''
-    # TODO: implement
+    root_domain = get_domain(root)
+    print(root_domain)
 
     queue = Queue()
     queue.put(root)
@@ -69,8 +115,17 @@ def crawl(root, wanted_content=[], within_domain=True):
                 extracted.append(ex)
                 extractlog.debug(ex)
 
+            stripped_root_link = strip_http_request(url)
+
             for link, title in parse_links(url, html):
-                queue.put(link)
+
+                if is_non_local(link, stripped_root_link):
+                    if link[0] not in visited:
+                        if not within_domain:
+                            queue.put(link)
+                        else:
+                            if get_domain(link) == root_domain:
+                                queue.put(link)
 
         except Exception as e:
             print(e, url)
