@@ -21,7 +21,6 @@ def parse_links(root, html):
             text = re.sub('\s+', ' ', text).strip()
             yield (parse.urljoin(root, link.get('href')), text)
 
-
 def parse_links_sorted(root, html):
     # TODO: implement
     return []
@@ -73,13 +72,10 @@ def get_domain(url):
 
     stripped_url = strip_www(strip_http_request(url))
 
-    try:
-        i = 0
-        while i < len(stripped_url) and stripped_url[i] != '/':
-            domain += stripped_url[i]
-            i += 1
-    except Exception as e:
-        print(url, stripped_url, e, i)
+    i = 0
+    while i < len(stripped_url) and stripped_url[i] != '/':
+        domain += stripped_url[i]
+        i += 1
 
     return domain
 
@@ -89,7 +85,6 @@ def is_non_local(url, stripped_root_link):
                 return True
         
     return False
-
 
 def crawl(root, wanted_content=[], within_domain=True):
     '''Crawl the url specified by `root`.
@@ -104,11 +99,30 @@ def crawl(root, wanted_content=[], within_domain=True):
     visited = []
     extracted = []
 
+    content_types = {
+        'text': ["text/html; charset=UTF-8", "text/plain; charset=UTF-8"],
+        'html': ["text/html; charset=UTF-8"],
+        'pdf:': ["application/pdf"],
+        'zip:': ["application/zip"],
+        'jpeg': ["image/jpeg"],
+        'png': ["image/png"],
+        'pptx': ["application/vnd.ms-powerpoint"]
+    }
+
     while not queue.empty():
         url = queue.get()
         try:
             req = request.urlopen(url)
             html = req.read()
+            headers = req.headers['Content-Type']
+
+            if len(wanted_content) > 0: # check if user wanted specific type(s) of content
+
+                content_matches = False
+                for content in wanted_content: # if so, determine if one is the same as the req header
+                    for appropriate_header in content_types[content.lower()]:
+                        if appropriate_header == headers:
+                            content_matches = True
 
             visited.append(url)
             visitlog.debug(url)
@@ -161,7 +175,7 @@ def main():
     nonlocal_links = get_nonlocal_links(site)
     writelines('nonlocal.txt', nonlocal_links)
 
-    visited, extracted = crawl(site, within_domain=True)
+    visited, extracted = crawl(site, wanted_content=["HTML"], within_domain=True)
     writelines('visited.txt', visited)
     writelines('extracted.txt', extracted)
 
