@@ -35,7 +35,7 @@ def parse_links_sorted(root, html):
             urls.append((parse.urljoin(root, link.get('href')), text))
 
     urls.sort(reverse=True, key=rank_link)
-    print(urls)
+    
     for url in urls:
         yield(url)
 
