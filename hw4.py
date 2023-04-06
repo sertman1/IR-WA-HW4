@@ -132,20 +132,26 @@ def crawl(root, wanted_content=[], within_domain=True):
             visited.append(url)
             visitlog.debug(url)
 
+            if url == "https://www.cs.jhu.edu/faculty/":
+                print(url in visited)
+
             for ex in extract_information(url, html):
                 extracted.append(ex)
                 extractlog.debug(ex)
 
             stripped_root_link = strip_http_request(url)
 
+            links_added_to_queue = [] # prevents repeat links being added
             for link, title in parse_links(url, html):
 
-                if is_non_local(link, stripped_root_link):
-                    if link not in visited:
-                        if not within_domain:
-                            queue.put(link)
-                        else:
-                            if get_domain(link) == root_domain: # NB, issue of visiting domain twice???
+                if link not in links_added_to_queue:
+
+                    if is_non_local(link, stripped_root_link):
+
+                        if link not in visited:
+
+                            if not within_domain or get_domain(link) == root_domain:
+                                links_added_to_queue.append(link)
                                 queue.put(link)
 
         except Exception as e:
@@ -163,12 +169,16 @@ def extract_information(address, html):
     for match in re.findall('\d\d\d-\d\d\d-\d\d\d\d', str(html)):
         results.append((address, 'PHONE', match))
     
+    # account for other formating
+    for match in re.findall('\(\d\d\d\) \d\d\d-\d\d\d\d', str(html)):
+        results.append((address, 'PHONE', match))
+    
     # hypens, periods, and underscores are all valid special characters besides alphanumerics for an email's username and domain; 
     # domain extension must contain a '.' followed by a 2-3 digit long sequence, e.g., '.us' '.edu' '
-    for match in re.findall('([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,3})', str(html)): 
+    for match in re.findall('([a-zA-Z0-9_\-\.]+@[a-zA-Z0-9_\-\.]+\.[a-zA-Z]{2,3})', str(html)): 
         results.append((address, 'EMAIL', match))
 
-    for match in re.findall('([a-zA-Z]+),([a-zA-Z]) ([0-9]{5})', str(html)):
+    for match in re.findall('[a-zA-Z ]+, [a-zA-Z]+ [0-9]{5}', str(html)):
         results.append((address, 'ADDRESS', match))
 
     return results
