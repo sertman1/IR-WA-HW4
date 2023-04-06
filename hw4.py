@@ -124,6 +124,9 @@ def crawl(root, wanted_content=[], within_domain=True):
                         if appropriate_header == headers:
                             content_matches = True
 
+                if not content_matches:
+                    continue
+
             visited.append(url)
             visitlog.debug(url)
 
