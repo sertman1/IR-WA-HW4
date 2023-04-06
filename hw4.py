@@ -22,18 +22,25 @@ def parse_links(root, html):
             yield (parse.urljoin(root, link.get('href')), text)
 
 def parse_links_sorted(root, html):
-    urls = PriorityQueue()
+    urls = []
 
     soup = BeautifulSoup(html, 'html.parser')
     for link in soup.find_all('a'):
-        print(link)
         href = link.get('href')
         if href:
             text = link.string
             if not text:
                 text = ''
             text = re.sub('\s+', ' ', text).strip()
-            yield (parse.urljoin(root, link.get('href')), text)
+            urls.append((parse.urljoin(root, link.get('href')), text))
+
+    urls.sort(reverse=True, key=rank_link)
+
+    for url in urls:
+        yield(url)
+
+def rank_link(link):
+    return 0
 
 def get_links(url):
     res = request.urlopen(url)
