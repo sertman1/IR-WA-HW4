@@ -45,6 +45,7 @@ def get_nonlocal_links(url):
 
     return filtered
 
+
 def is_http_request(url):
     if len(url) > 8 and url[4] == 's':
         if url[0:8] == "https://":
@@ -85,6 +86,7 @@ def is_non_local(url, stripped_root_link):
                 return True
         
     return False
+
 
 def crawl(root, wanted_content=[], within_domain=True):
     '''Crawl the url specified by `root`.
@@ -139,7 +141,7 @@ def crawl(root, wanted_content=[], within_domain=True):
             for link, title in parse_links(url, html):
 
                 if is_non_local(link, stripped_root_link):
-                    if link[0] not in visited:
+                    if link not in visited:
                         if not within_domain:
                             queue.put(link)
                         else:
