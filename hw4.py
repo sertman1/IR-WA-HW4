@@ -35,12 +35,54 @@ def parse_links_sorted(root, html):
             urls.append((parse.urljoin(root, link.get('href')), text))
 
     urls.sort(reverse=True, key=rank_link)
-
+    print(urls)
     for url in urls:
         yield(url)
 
+# One of the main metrics used for ranking a link is how many '/' (subdirectories) it 
+# contains. The logic behind this is that the more '/' present, the deeper into a domain
+# a link is and therefore the more specific the content it is traversing will be.
+# We assume that more specific content is more important to extract first.
+# Additionally, this will allow for the crawler to go as deep as possible into the
+# domain first, ultimately reaching the deepest parts first, and then working back
+# up from there to the more generic parts.
+# e.g., if the crawler explores www.cs.jhu.edu, the links it retrieves will be the
+# upmost general--links applying to the entirety of computer science at jhu.
+# But, if the crawler explores a more specific link before this, such as 
+# https://www.cs.jhu.edu/~yarowsky/cs466.html, the content retrieved will be much more
+# individulized (i.e., pertaining to a particular professor and one of their courses).
+# This is excatly what we want the crawler to do: extract the information that is hard
+# to reach from the generic domain which everyone already knows and can easily access.
+#
+# Another ranking metric is how long the link's text is.
+# The assumption made is that the longer the text is, the more prominent on the
+# webpage and thus more important a given link will be.
+# Consider: if a given link was not important, it would contain as little text as 
+# possible on the screen so as to not entice a user to click on it/draw attention to it.
+# This metric is not weighted as heavily as the number of '/' because it often could 
+# be the case that certain links are described using many words stylistically, not
+# indicating any relevance to the importance of that link. Also, some expressions in English
+# are much shorter than their equivalent in other languages, yet they mean the same thing:
+# e.g., "I'm ten!" vs French "j'ai dix ans!" – they ought to be ranked the same despite char length)
+#
+# In short, the first metric listed above is universal to any language and does not
+# deal with subjectivity, thus deserving a greater weighting. Nonetheless, the second
+# metric is important for helping to settle rank ties and thus be more precise
+# (e.g., it is common for links only to be a couple subdirectories from the domain).
 def rank_link(link):
-    return 0
+    rank = 0 # the higher the rank, the greater the priority to crawl 
+
+    url = link[0]
+    url = strip_http_request(url)
+
+    num_subdirectories = 0
+    for char in url:
+        if char == '/':
+            num_subdirectories += 1
+
+    rank = 10 * num_subdirectories + len(link[1])
+
+    return rank
 
 def get_links(url):
     res = request.urlopen(url)
