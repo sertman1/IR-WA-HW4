@@ -2,7 +2,7 @@ import logging
 import re
 import sys
 from bs4 import BeautifulSoup
-from queue import Queue
+from queue import Queue, PriorityQueue
 from urllib import parse, request
 
 logging.basicConfig(level=logging.DEBUG, filename='output.log', filemode='w')
@@ -22,8 +22,11 @@ def parse_links(root, html):
             yield (parse.urljoin(root, link.get('href')), text)
 
 def parse_links_sorted(root, html):
+    urls = PriorityQueue()
+
     soup = BeautifulSoup(html, 'html.parser')
     for link in soup.find_all('a'):
+        print(link)
         href = link.get('href')
         if href:
             text = link.string
@@ -147,9 +150,7 @@ def crawl(root, wanted_content=[], within_domain=True):
 
             links_added_to_queue = [] # prevents repeat links being added
 
-            # NB, title field for part 6!!
-
-            for link, title in parse_links(url, html):
+            for link, title in parse_links_sorted(url, html):
 
                 if link not in links_added_to_queue:
 
