@@ -132,9 +132,6 @@ def crawl(root, wanted_content=[], within_domain=True):
             visited.append(url)
             visitlog.debug(url)
 
-            if url == "https://www.cs.jhu.edu/faculty/":
-                print(url in visited)
-
             for ex in extract_information(url, html):
                 extracted.append(ex)
                 extractlog.debug(ex)
@@ -142,6 +139,9 @@ def crawl(root, wanted_content=[], within_domain=True):
             stripped_root_link = strip_http_request(url)
 
             links_added_to_queue = [] # prevents repeat links being added
+
+            # NB, title field for part 6!!
+
             for link, title in parse_links(url, html):
 
                 if link not in links_added_to_queue:
