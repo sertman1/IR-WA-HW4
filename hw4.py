@@ -163,6 +163,7 @@ def crawl(root, wanted_content=[], within_domain=True):
 def extract_information(address, html):
     '''Extract contact information from html, returning a list of (url, category, content) pairs,
     where category is one of PHONE, ADDRESS, EMAIL'''
+    html = BeautifulSoup(html, "html.parser")
 
     results = []
 
