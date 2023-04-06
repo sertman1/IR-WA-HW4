@@ -178,7 +178,7 @@ def extract_information(address, html):
     for match in re.findall('([a-zA-Z0-9_\-\.]+@[a-zA-Z0-9_\-\.]+\.[a-zA-Z]{2,3})', str(html)): 
         results.append((address, 'EMAIL', match))
 
-    for match in re.findall('[a-zA-Z ]+, [a-zA-Z]+ [0-9]{5}', str(html)):
+    for match in re.findall('[a-zA-Z]+ ?[a-zA-z]+?, [a-zA-Z.]+ [0-9]{5}', str(html)):
         results.append((address, 'ADDRESS', match))
 
     return results
