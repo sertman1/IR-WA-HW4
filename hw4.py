@@ -143,7 +143,7 @@ def crawl(root, wanted_content=[], within_domain=True):
                         if not within_domain:
                             queue.put(link)
                         else:
-                            if get_domain(link) == root_domain:
+                            if get_domain(link) == root_domain: # NB, issue of visiting domain twice???
                                 queue.put(link)
 
         except Exception as e:
@@ -156,10 +156,19 @@ def extract_information(address, html):
     '''Extract contact information from html, returning a list of (url, category, content) pairs,
     where category is one of PHONE, ADDRESS, EMAIL'''
 
-    # TODO: implement
     results = []
+
     for match in re.findall('\d\d\d-\d\d\d-\d\d\d\d', str(html)):
         results.append((address, 'PHONE', match))
+    
+    # hypens, periods, and underscores are all valid special characters besides alphanumerics for an email's username and domain; 
+    # domain extension must contain a '.' followed by a 2-3 digit long sequence, e.g., '.us' '.edu' '
+    for match in re.findall('([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,3})', str(html)): 
+        results.append((address, 'EMAIL', match))
+
+    for match in re.findall('([a-zA-Z]+),([a-zA-Z]) ([0-9]{5})', str(html)):
+        results.append((address, 'ADDRESS', match))
+
     return results
 
 
