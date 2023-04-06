@@ -22,8 +22,15 @@ def parse_links(root, html):
             yield (parse.urljoin(root, link.get('href')), text)
 
 def parse_links_sorted(root, html):
-    # TODO: implement
-    return []
+    soup = BeautifulSoup(html, 'html.parser')
+    for link in soup.find_all('a'):
+        href = link.get('href')
+        if href:
+            text = link.string
+            if not text:
+                text = ''
+            text = re.sub('\s+', ' ', text).strip()
+            yield (parse.urljoin(root, link.get('href')), text)
 
 def get_links(url):
     res = request.urlopen(url)
